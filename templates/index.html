@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assinatura de Documentos</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+
+<div class="container">
+    <h1>Envie um documento para assinar</h1>
+
+    <form action="/" method="post" enctype="multipart/form-data" id="file-upload-form">
+        <label for="file-input" class="custom-upload-button">Selecionar arquivo</label>
+        <input type="file" name="file" required id="file-input" style="display: none;">
+        <input type="submit" value="Enviar para assinar" class="custom-submit-button">
+        <div id="file-name"></div>
+    </form>
+
+    {% if error_message %}
+    <div class="error">
+        {{ error_message }}
+    </div>
+    {% endif %}
+
+    <h2>Documentos enviados</h2>
+    <table id="document-table">
+        <thead>
+            <tr>
+                <th>Nome do Arquivo</th>
+                <th>Status</th>
+                <th>Download</th>
+            </tr>
+        </thead>
+        <tbody id="document-list">
+        {% for document in documents %}
+            <tr>
+                <td>{{ document.name }}</td>
+                <td class="{{ 'status-concluido' if document.status.strip() == 'Concluído' else 'status-pendente' }}">
+                    {{ document.status }}
+                </td>
+                <td>
+                    {% if document.status.strip() == 'Concluído' %}
+                    <a href="{{ url_for('download_document', document_id=document.id, type='Original') }}">
+                        <img src="{{ url_for('static', filename='img/download.png') }}" alt="Download" width="24" height="24">
+                    </a>
+                    {% endif %}
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<script>
+    document.getElementById('file-input').addEventListener('change', function () {
+        var fileName = this.files[0].name;
+        document.getElementById('file-name').textContent = 'Arquivo anexado: ' + fileName;
+    });
+
+    function updateDocumentList() {
+        fetch('/get_documents')
+        .then(response => response.json())
+        .then(data => {
+            var documentList = document.getElementById('document-list');
+            documentList.innerHTML = '';
+            data.documents.forEach(function(doc) {
+                var row = document.createElement('tr');
+                var nameCell = document.createElement('td');
+                var statusCell = document.createElement('td');
+                var downloadCell = document.createElement('td');
+
+                nameCell.textContent = doc.name;
+
+                if(doc.status == 'Concluído') {
+                    statusCell.textContent = doc.status;
+                    statusCell.classList.add("status-concluido");
+                    downloadCell.innerHTML = '<a href="/download_document/' + doc.id + '?type=PrinterFriendlyVersion"><img src="{{ url_for('static', filename='img/download.png') }}" alt="Download" width="24" height="24"></a>';
+                } else {
+                    statusCell.textContent = doc.status;
+                    statusCell.classList.add("status-pendente");
+                }
+
+                row.appendChild(nameCell);
+                row.appendChild(statusCell);
+                row.appendChild(downloadCell);
+                documentList.appendChild(row);
+            });
+        })
+        .catch(error => {
+            console.error('Erro ao buscar lista de documentos:', error);
+        });
+    }
+
+    updateDocumentList();
+</script>
+
+</body>
+</html>

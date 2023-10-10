@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro de Assinaturas</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</head>
+<body>
+{% include 'header.html' %}
+<div class="container">
+    <h1>Cadastro de Assinaturas</h1>
+
+    <form action="/envio" method="post" enctype="multipart/form-data">
+        <div class="form-group">
+            <label for="document_name">Nome do Documento:</label>
+            <input type="text" name="document_name" id="document_name" class="form-control" required>
+        </div>
+
+        <div class="form-group signers-list" id="signers">
+            <h2>Signatários:</h2>
+        </div>
+
+        <button type="button" data-toggle="modal" data-target="#signerModal" class="btn btn-primary mb-3">Adicionar Signatário</button>
+
+        <div class="form-group">
+            <label for="file_input" class="btn btn-secondary">Selecionar arquivo</label>
+            <input type="file" name="file" id="file_input" required style="display: none;">
+            <span id="file_name" class="ml-2"></span>
+        </div>
+
+
+        <div class="form-group">
+            <input type="submit" value="Iniciar Assinatura" class="btn btn-success">
+        </div>
+    </form>
+
+    {% if error_message %}
+    <div class="error">
+        {{ error_message }}
+    </div>
+    {% endif %}
+</div>
+
+<!-- Início do Modal -->
+<div class="modal fade" id="signerModal" tabindex="-1" role="dialog" aria-labelledby="signerModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="signerModalLabel">Adicionar Signatário</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <label for="signer_email_search">Pesquisar por E-mail:</label>
+                <input type="email" id="signer_email_search" class="form-control" placeholder="Digite o e-mail para pesquisar">
+                <button type="button" onclick="searchSigner()">Pesquisar</button>
+
+                <div id="signerSearchResult">
+                    <!-- Aqui serão exibidos os resultados da pesquisa -->
+                </div>
+
+                <hr>
+                <h6>Ou cadastre um novo signatário:</h6>
+                <label for="new_signer_name">Nome:</label>
+                <input type="text" id="new_signer_name" class="form-control">
+                <label for="new_signer_email">Email:</label>
+                <input type="email" id="new_signer_email" class="form-control">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
+                <button type="button" class="btn btn-primary" onclick="addSignerFromModal()">Adicionar</button>
+            </div>
+        </div>
+        </div>
+    </div>
+    <!-- Fim do Modal -->
+
+</div> <!-- Fim do container -->
+
+<script>
+    let signerCount = 0; // Começando de 0, pois agora não temos um signatário padrão
+
+    function searchSigner() {
+        const email = document.getElementById('signer_email_search').value;
+
+        $.ajax({
+            url: '/search_signer',
+            type: 'POST',
+            data: { email: email },
+            success: function(data) {
+                let resultHtml = '';
+                if (data.signers && data.signers.length > 0) {
+                    data.signers.forEach(signer => {
+                        resultHtml += `<p>${signer.name} (${signer.email}) <button onclick="selectSigner('${signer.name}', '${signer.email}')">Selecionar</button></p>`;
+                    });
+                } else {
+                    resultHtml = '<p>Nenhum signatário encontrado.</p>';
+                }
+                document.getElementById('signerSearchResult').innerHTML = resultHtml;
+            }
+        });
+    }
+
+    function selectSigner(name, email) {
+        document.getElementById('new_signer_name').value = name;
+        document.getElementById('new_signer_email').value = email;
+    }
+
+    function addSignerFromModal() {
+        const name = document.getElementById('new_signer_name').value;
+        const email = document.getElementById('new_signer_email').value;
+
+        if (name && email) {
+            addSigner(name, email);
+            $('#signerModal').modal('hide');
+        }
+    }
+
+    function addSigner(name, email) {
+        signerCount++;
+
+        const signerDiv = document.createElement('div');
+        signerDiv.className = "signer";
+
+        const nameLabel = document.createElement('label');
+        nameLabel.setAttribute('for', `signer_name_${signerCount}`);
+        nameLabel.innerText = 'Nome:';
+        const nameInput = document.createElement('input');
+        nameInput.setAttribute('type', 'text');
+        nameInput.setAttribute('name', `signer_name_${signerCount}`);
+        nameInput.className = 'form-control';
+        nameInput.value = name;
+        nameInput.required = true;
+
+        const emailLabel = document.createElement('label');
+        emailLabel.setAttribute('for', `signer_email_${signerCount}`);
+        emailLabel.innerText = 'Email:';
+        const emailInput = document.createElement('input');
+        emailInput.setAttribute('type', 'email');
+        emailInput.setAttribute('name', `signer_email_${signerCount}`);
+        emailInput.className = 'form-control';
+        emailInput.value = email;
+        emailInput.required = true;
+
+        signerDiv.appendChild(nameLabel);
+        signerDiv.appendChild(nameInput);
+        signerDiv.appendChild(emailLabel);
+        signerDiv.appendChild(emailInput);
+
+        document.getElementById('signers').appendChild(signerDiv);
+    }
+    document.querySelector("form").onsubmit = function() {
+    this.querySelector("input[type='submit']").value = "Processando...";
+    this.querySelector("input[type='submit']").disabled = true;
+};
+
+
+</script>
+<script>
+    document.getElementById("file_input").onchange = function() {
+        document.getElementById("file_name").textContent = this.files[0].name;
+    };
+</script>
+</body>
+</html>
