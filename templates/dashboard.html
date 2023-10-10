@@ -7,77 +7,119 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+
 </head>
 
 <body>
 {% include 'header.html' %}
 
-    <div class="container mt-4">
-        <h1 class="d-inline">Lista de Documentos</h1>
-        <a href="{{ url_for('envio') }}" class="btn btn-success float-right">Nova Assinatura</a>
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Nome do Arquivo</th>
-                    <th>Nome do Destinatário</th>
-                    <th>Data de Envio</th>
-                    <th>Status do Documento</th>
-                    <th>Arquivo</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for doc in documentos %}
-                <tr>
-                    <td>{{ doc.nome_arquivo }}</td>
-                   <td>
-                        {% set destinatarios_list = doc.destinatarios.split(",") if doc.destinatarios else [] %}
-                        {{ destinatarios_list[0] }}
-                        {% if destinatarios_list|length > 1 %}
-                            <span title="{{ ', '.join(destinatarios_list[1:]) }}">e mais...</span>
-                        {% endif %}
-                    </td>
-
-
-                    <td>{{ doc.timestamp|format_timestamp }}</td>
-                    <td class="{% if doc.status == 'Pendente' %}status-pendente{% elif doc.status == 'Concluído' %}status-concluido{% endif %}">
-                        {{ doc.status }}
-                    </td>
-                    <td>
-                        {% if doc.status == "Concluído" %}
-                            <a href="/download_document/{{ doc.id }}?type=PrinterFriendlyVersion">
-                                <img src="{{ url_for('static', filename='img/download.png') }}" alt="Download" width="24" height="24">
-                            </a>
-                        {% endif %}
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        <nav aria-label="Page navigation">
-            <ul class="pagination">
-                <li class="page-item {% if current_page <= 1 %}disabled{% endif %}">
-                    <a class="page-link" href="{{ url_for('dashboard', page=current_page-1) }}" aria-label="Previous">
-                        <span aria-hidden="true">&laquo;</span>
-                        <span class="sr-only">Previous</span>
-                    </a>
-                </li>
-                {% for page_num in range(1, total_pages+1) %}
-                <li class="page-item {% if page_num == current_page %}active{% endif %}">
-                    <a class="page-link" href="{{ url_for('dashboard', page=page_num) }}">{{ page_num }}</a>
-                </li>
-                {% endfor %}
-                <li class="page-item {% if current_page >= total_pages %}disabled{% endif %}">
-                    <a class="page-link" href="{{ url_for('dashboard', page=current_page+1) }}" aria-label="Next">
-                        <span aria-hidden="true">&raquo;</span>
-                        <span class="sr-only">Next</span>
-                    </a>
-                </li>
-            </ul>
-        </nav>
+<div class="container mt-4">
+    <h1 class="d-inline">Lista de Documentos</h1>
+    <a href="{{ url_for('envio') }}" class="btn btn-success float-right">Nova Assinatura</a>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Nome do Arquivo</th>
+                <th>Nome do Destinatário</th>
+                <th>Data de Envio</th>
+                <th>Status</th>
+                <th>Arquivo</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for doc in documentos %}
+            <tr>
+                <td>{{ doc.nome_arquivo }}</td>
+               <td>
+                    {% set destinatarios_list = doc.destinatarios.split(",") if doc.destinatarios else [] %}
+                    {{ destinatarios_list[0] }}
+                    {% if destinatarios_list|length > 1 %}
+                        <span title="{{ ', '.join(destinatarios_list[1:]) }}">e mais...</span>
+                    {% endif %}
+                </td>
+                <td>{{ doc.timestamp|format_timestamp }}</td>
+                <td class="{% if doc.status == 'Pendente' %}status-pendente{% elif doc.status == 'Concluído' %}status-concluido{% endif %}">
+                    {{ doc.status }}
+                </td>
+                <td>
+                    {% if doc.status == "Concluído" %}
+                        <a href="/download_document/{{ doc.id }}?type=PrinterFriendlyVersion">
+                            <img src="{{ url_for('static', filename='img/download.png') }}" alt="Download" width="24" height="24">
+                        </a>
+                    {% endif %}
+                </td>
+                <td>
+                    <button class="btn btn-danger delete-btn" data-id="{{ doc.id }}">Deletar</button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <nav aria-label="Page navigation">
+        <ul class="pagination">
+            <li class="page-item {% if current_page <= 1 %}disabled{% endif %}">
+                <a class="page-link" href="{{ url_for('dashboard', page=current_page-1) }}" aria-label="Previous">
+                    <span aria-hidden="true">&laquo;</span>
+                    <span class="sr-only">Previous</span>
+                </a>
+            </li>
+            {% for page_num in range(1, total_pages+1) %}
+            <li class="page-item {% if page_num == current_page %}active{% endif %}">
+                <a class="page-link" href="{{ url_for('dashboard', page=page_num) }}">{{ page_num }}</a>
+            </li>
+            {% endfor %}
+            <li class="page-item {% if current_page >= total_pages %}disabled{% endif %}">
+            <a class="page-link" href="{{ url_for('dashboard', page=current_page+1) }}" aria-label="Next">
+                <span aria-hidden="true">&raquo;</span>
+                <span class="sr-only">Next</span>
+            </a>
+        </li>
+    </ul>
+</nav>
     </div>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const deleteButtons = document.querySelectorAll('.delete-btn');
 
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    deleteButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            const docId = e.target.getAttribute('data-id');
+            if(confirm("Tem certeza de que deseja deletar este documento?")) {
+                deleteDocument(docId);
+            }
+        });
+    });
+});
+
+function deleteDocument(id) {
+    fetch(`/api/documents/${id}`, {
+        method: 'DELETE',
+    })
+    .then(response => {
+        if (response.headers.get('content-type').includes('application/json')) {
+            return response.json();
+        } else {
+            throw new Error('Não é um JSON válido');
+        }
+    })
+    .then(data => {
+        if (data.code && data.code === "success") {
+            alert("Documento deletado com sucesso!");
+            location.reload(); // Recarregue a página para atualizar a lista
+        } else {
+            alert("Erro ao deletar o documento: " + data.message);
+        }
+    })
+    .catch(error => {
+        console.error("Erro ao deletar o documento:", error);
+    });
+}
+</script>
+
 </body>
 </html>

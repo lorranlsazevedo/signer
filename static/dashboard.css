@@ -20,7 +20,20 @@ h1 {
     color: #4a4a4a;
     font-weight: 600;
     margin-bottom: 30px;
+    padding: 10px;
+    background-color: #f7f7f7;
+    border-bottom: 3px solid #2c3e50;
+    border-radius: 5px;
+    display: inline-block;
+    position: relative;
 }
+
+h1::before {
+    /*content: "\f15c"; ícone de lista da FontAwesome */
+    font-family: 'FontAwesome';
+    margin-right: 10px;
+}
+
 
 .table {
     border-collapse: separate;

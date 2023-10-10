@@ -212,14 +212,14 @@ def envio():
     return render_template('envio.html', documents=documents, error_message=error_message)
 
 
-ITEMS_PER_PAGE = 15
+ITEMS_PER_PAGE = 12
 
 
 @app.route('/dashboard')
 @app.route('/dashboard/page/<int:page>')
 @login_required
 def dashboard(page=1):
-    ITEMS_PER_PAGE = 15
+    ITEMS_PER_PAGE = 12
     offset = (page - 1) * ITEMS_PER_PAGE
 
     with sqlite3.connect(DATABASE) as conn:
@@ -320,6 +320,33 @@ def search_signer():
 
     signers_list = [{'name': name, 'email': email} for name, email in signers]
     return jsonify({"signers": signers_list})
+
+@app.route('/api/documents/<int:doc_db_id>', methods=['DELETE'])
+@login_required
+def delete_api_document(doc_db_id):
+    # Buscando o caminho_arquivo associado ao doc_db_id
+    with sqlite3.connect(DATABASE) as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT caminho_arquivo FROM documentos WHERE id = ?", (doc_db_id,))
+        result = cursor.fetchone()
+        if result:
+            document_id_from_api = result[0]
+        else:
+            return jsonify({'code': 'error', 'message': 'Documento não encontrado no banco de dados'}), 404
+
+    # Deletando o documento usando a API
+    headers = {"X-Api-Key": api_key}
+    response = requests.delete(f"{base_url}/api/documents/{document_id_from_api}", headers=headers)
+
+    if response.status_code == 200:
+        # Deletando do banco de dados local
+        cursor.execute("DELETE FROM documentos WHERE id = ?", (doc_db_id,))
+        conn.commit()
+        return jsonify({'code': 'success', 'message': 'Documento deletado com sucesso!'})
+    else:
+        return jsonify({'code': 'error', 'message': f"Erro ao deletar o documento na API: {response.text}"}), response.status_code
+
+
 
 
 if __name__ == '__main__':
