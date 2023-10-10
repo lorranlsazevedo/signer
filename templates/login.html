@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet">
+    <style>
+        .login {
+            margin-top: -25%; /* Valor negativo para mover o conteúdo para cima */
+        }
+    </style>
+</head>
+<body>
+
+    <div class="login">
+        <!-- Imagem do logo -->
+        <img src="{{ url_for('static', filename='img/signer.png') }}" alt="Signer Logo" style="display: block; margin: 0 auto 20px auto; max-width: 100%; height: auto;">
+
+        <h1>Login</h1>
+        <form method="post" action="{{ url_for('login') }}">
+            <input type="text" name="login" placeholder="Login" required="required" class="form-control mb-2"/>
+            <input type="password" name="senha" placeholder="Senha" required="required" class="form-control mb-2"/>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        {% if category == "danger" %}
+                            <!-- Mensagem de erro em vermelho -->
+                            <div style="color: red;">{{ message }}</div>
+                        {% endif %}
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <button type="submit" class="btn btn-primary btn-block btn-large">Entrar</button>
+        </form>
+    </div>
+</body>
+</html>
