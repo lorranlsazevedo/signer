@@ -193,7 +193,7 @@ def envio():
                 if response_document.status_code == 200:
                     current_timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                     document_id_from_api = response_document.json()[0]["documentId"]
-                    document_name = request.form['document_name']
+                    document_name = uploaded_file.filename
 
                     with sqlite3.connect(DATABASE) as conn:
                         cursor = conn.cursor()
