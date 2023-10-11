@@ -1,3 +1,4 @@
+import os
 import sqlite3
 from flask import Flask, render_template, request, jsonify, redirect, url_for, Response, session
 import requests
@@ -6,7 +7,7 @@ from flask import flash
 from datetime import datetime
 from functools import wraps
 
-DATABASE = r'C:\Users\lorra\PycharmProjects\signer - Copia\database\signer_database.db'
+DATABASE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'database', 'signer_database.db')
 
 app = Flask(__name__)
 app.config['STATIC_FOLDER'] = 'static'
@@ -137,6 +138,10 @@ def envio():
                 while f'signer_name_{i}' in request.form:
                     signer_name = request.form[f'signer_name_{i}']
                     signer_email = request.form[f'signer_email_{i}']
+                    signer_cpf = request.form.get(f'signer_cpf_{i}', None)
+
+                    if signer_cpf:
+                        signer_cpf = signer_cpf.replace(".", "").replace("-", "")
 
                     with sqlite3.connect(DATABASE) as conn:
                         cursor = conn.cursor()
@@ -145,15 +150,19 @@ def envio():
 
                         if existing_participante:
                             participante_id = existing_participante[0]
+                            if signer_cpf:  # Se o CPF foi fornecido, atualize o CPF do signatário existente
+                                cursor.execute("UPDATE participantes SET cpf = ? WHERE id = ?",
+                                               (signer_cpf, participante_id))
+                                conn.commit()
                         else:
                             cursor.execute("""
-                                        INSERT INTO participantes (nome, email)
-                                        VALUES (?, ?)
-                                    """, (signer_name, signer_email))
+                                    INSERT INTO participantes (nome, email, cpf)
+                                    VALUES (?, ?, ?)
+                                    """, (signer_name, signer_email, signer_cpf))
                             participante_id = cursor.lastrowid
                             conn.commit()
 
-                    flowActions.append({
+                    signer_data = {
                         "type": "Signer",
                         "step": i,
                         "user": {
@@ -161,7 +170,12 @@ def envio():
                             "email": signer_email
                         },
                         "allowElectronicSignature": True
-                    })
+                    }
+
+                    if signer_cpf:
+                        signer_data["user"]["identifier"] = signer_cpf
+
+                    flowActions.append(signer_data)
                     i += 1
 
                 document_data = {
@@ -314,11 +328,11 @@ def search_signer():
 
     conn = sqlite3.connect(DATABASE)
     cursor = conn.cursor()
-    cursor.execute("SELECT nome, email FROM participantes WHERE email LIKE ?", (f"%{email}%",))
+    cursor.execute("SELECT nome, email, cpf FROM participantes WHERE email LIKE ?", ('%' + email + '%',))
     signers = cursor.fetchall()
     conn.close()
 
-    signers_list = [{'name': name, 'email': email} for name, email in signers]
+    signers_list = [{'name': name, 'email': email, 'cpf': cpf} for name, email, cpf in signers]
     return jsonify({"signers": signers_list})
 
 @app.route('/api/documents/<int:doc_db_id>', methods=['DELETE'])
@@ -347,7 +361,5 @@ def delete_api_document(doc_db_id):
         return jsonify({'code': 'error', 'message': f"Erro ao deletar o documento na API: {response.text}"}), response.status_code
 
 
-
-
-if __name__ == '__main__':
-    app.run(debug=True)
+if __name__ == "__main__":
+    app.run(host='0.0.0.0', port=5000)

@@ -1,11 +1,13 @@
+import os
 import sqlite3
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 import bcrypt
 
-DATABASE = r'C:\Users\lorra\PycharmProjects\signer - Copia\database\signer_database.db'
+DATABASE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'database', 'signer_database.db')
 
 login_app = Flask(__name__)
 login_app.secret_key = '2765570032dac2476be7ef0c1c50a9db'
+
 
 
 @login_app.route('/login', methods=['GET', 'POST'])
