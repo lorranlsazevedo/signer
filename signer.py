@@ -6,6 +6,14 @@ import bcrypt
 from flask import flash
 from datetime import datetime
 from functools import wraps
+import logging
+
+log = logging.getLogger('werkzeug')
+log.setLevel(logging.ERROR)
+
+flask_log = logging.getLogger('flask')
+flask_log.setLevel(logging.ERROR)
+
 
 DATABASE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'database', 'signer_database.db')
 
@@ -17,6 +25,7 @@ base_url = "https://www.dropsigner.com"
 api_key = "9b38597a67692b42aa96f9810d18f36dec3ff49a0ca5059054f1d7f1e13364ff"
 documents = []
 
+
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -25,12 +34,14 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+
 @app.template_filter('format_timestamp')
 def _jinja2_filter_format_timestamp(timestamp):
     if timestamp is None:
         return
     dt_obj = datetime.strptime(timestamp, '%Y-%m-%d %H:%M:%S')
     return dt_obj.strftime('%d/%m/%Y - %H:%M')
+
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -58,9 +69,11 @@ def login():
 
     return render_template('login.html')
 
+
 @app.route('/logout')
 def logout():
     return redirect(url_for('login'))
+
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -89,6 +102,7 @@ def before_request():
     if 'logged_in' not in session and request.endpoint not in ['login', 'register', 'static']:
         return redirect(url_for('login'))
 
+
 def translate_status(status):
     return {
         "Concluded": "Concluído",
@@ -113,7 +127,7 @@ def get_documento_status(doc_db_id):
         return translate_status(response.json()["status"])
     else:
         print(
-            f"Erro ao buscar status do documento {document_id}: {response.status_code} - {response.text}")  # Imprime o erro
+            f"Erro ao buscar status do documento {document_id}: {response.status_code} - {response.text}")
         return "Erro ao obter status"
 
 
@@ -261,7 +275,7 @@ def dashboard(page=1):
 
         documentos_db = cursor.fetchall()
 
-    print("Documentos recuperados do DB:", documentos_db)
+    #print("Documentos recuperados do DB:", documentos_db)
 
     documentos = []
     for doc in documentos_db:
@@ -275,10 +289,9 @@ def dashboard(page=1):
             'destinatarios': destinatarios
         })
 
-    print("Documentos preparados para renderização:", documentos)
+    #print("Documentos preparados para renderização:", documentos)
 
     return render_template('dashboard.html', documentos=documentos, current_page=page, total_pages=total_pages)
-
 
 
 @app.route('/get_documents', methods=['GET'])
@@ -319,6 +332,7 @@ def download_document(doc_db_id):
     else:
         return f"Erro ao baixar o documento: {response.status_code} - {response.text}", response.status_code
 
+
 @app.route('/search_signer', methods=['POST'])
 def search_signer():
     email = request.form.get('email')
@@ -334,6 +348,7 @@ def search_signer():
 
     signers_list = [{'name': name, 'email': email, 'cpf': cpf} for name, email, cpf in signers]
     return jsonify({"signers": signers_list})
+
 
 @app.route('/api/documents/<int:doc_db_id>', methods=['DELETE'])
 @login_required
