@@ -1,20 +1,18 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cadastro de Assinaturas</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </head>
+
 <body>
-{% include 'header.html' %}
-<div class="container">
-    <h1>Cadastro de Assinaturas</h1>
+    {% include 'header.html' %}
+    <div class="container">
+        <h1>Cadastro de Assinaturas</h1>
 
     <form action="/envio" method="post" enctype="multipart/form-data" onsubmit="return validateForm();">
 
@@ -81,10 +79,13 @@
     </div>
     <!-- Fim do Modal -->
 
-</div> <!-- Fim do container -->
 
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 <script>
-    let signerCount = 0; // Começando de 0, pois agora não temos um signatário padrão
+    let signerCount = 0;
 
     function searchSigner() {
         const email = document.getElementById('signer_email_search').value;
@@ -122,16 +123,19 @@
         const email = document.getElementById('new_signer_email').value;
         const cpf = document.getElementById('new_signer_cpf').value;
 
+        if (!name || !email) {
+            alert("Por favor, preencha o nome e o e-mail.");
+            return;
+        }
+
         if (cpf && !validarCPF(cpf)) {
             alert("Por favor, insira um CPF válido.");
             return;
         }
 
-        if (name && email) {
-            addSigner(name, email, cpf);
-            clearModalFields();
-            $('#signerModal').modal('hide');
-        }
+        addSigner(name, email, cpf);
+        clearModalFields();
+        $('#signerModal').modal('hide');
     }
 
 
@@ -258,11 +262,6 @@
             return false;
         return true;
 }
-
-
-
-</script>
-<script>
     document.getElementById("file_input").onchange = function() {
         document.getElementById("file_name").textContent = this.files[0].name;
     };
