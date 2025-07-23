@@ -1,6 +1,7 @@
 # app.py
 from flask import Flask
 from datetime import datetime
+from blueprints.users import users_bp
 
 def create_app():
     """
@@ -17,6 +18,7 @@ def create_app():
     from blueprints.documents import documents_bp
     app.register_blueprint(auth_bp)
     app.register_blueprint(documents_bp)
+    app.register_blueprint(users_bp)
 
     @app.template_filter('format_timestamp')
     def _jinja2_filter_format_timestamp(timestamp_str):

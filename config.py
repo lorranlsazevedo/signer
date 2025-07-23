@@ -17,3 +17,5 @@ class Config:
     SIGNER_BASE_URL = os.environ.get('SIGNER_BASE_URL', 'https://www.dropsigner.com')
 
     ITEMS_PER_PAGE = 12
+
+    LDAP_VALIDATE_TOKEN_URL = 'https://auth.sleiloesjudiciais.com.br/api/ldap/validate-token'

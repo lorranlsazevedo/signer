@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciamento de Usuários</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <style>
+        :root { --bs-font-sans-serif: 'Inter', sans-serif; --bs-body-bg: #f9fafb; --bs-body-color: #374151; --bs-border-color: #e5e7eb; --bs-primary: #4f46e5; --header-dark-bg: #111827; }
+        body { background-color: var(--bs-body-bg); font-family: var(--bs-font-sans-serif); }
+        .header { background-color: var(--header-dark-bg); }
+        .brand-logo { height: 90px; }
+        .main-card { background-color: #ffffff; border: 1px solid var(--bs-border-color); border-radius: 0.75rem; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05); }
+        .table thead th { color: #6b7280; text-transform: uppercase; font-size: 0.75rem; font-weight: 600; }
+    </style>
+</head>
+<body>
+{% include 'header.html' %}
+
+<main class="container my-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 fw-bold mb-0">Gerenciamento de Usuários</h1>
+            <p class="text-muted mb-0">Adicione, edite e gerencie os usuários do sistema.</p>
+        </div>
+        <a href="{{ url_for('users.create_user') }}" class="btn btn-primary fw-semibold px-4 py-2">
+            <i class="fas fa-user-plus me-2"></i>Novo Usuário
+        </a>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="main-card">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th class="px-4 py-3">Nome</th>
+                        <th class="px-4 py-3">Login</th>
+                        <th class="px-4 py-3">E-mail</th> <th class="px-4 py-3">
+                        <th class="px-4 py-3">Departamento</th>
+                        <th class="px-4 py-3 text-center">Admin</th> <th class="px-4 py-3 text-end">Ações</th>   </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr>
+                        <td class="px-4 py-3 fw-semibold">{{ user.nome }}</td>
+                        <td class="px-4 py-3 text-muted">{{ user.login }}</td>
+                        <td class="px-4 py-3 text-muted">{{ user.email }}</td>
+                        <td class="px-4 py-3 text-muted">{{ user.depto_nome }}</td>
+                        <td class="px-4 py-3 text-center">
+                            {% if user.is_admin %}
+                                <span class="badge bg-success-subtle text-success-emphasis">Sim</span>
+                            {% else %}
+                                <span class="badge bg-secondary-subtle text-secondary-emphasis">Não</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-4 py-3 text-end">
+                            <a href="{{ url_for('users.edit_user', user_id=user.id) }}" class="btn btn-sm btn-outline-secondary">Editar</a>
+                            <button class="btn btn-sm btn-outline-secondary change-password-btn" data-bs-toggle="modal" data-bs-target="#changePasswordModal" data-user-id="{{ user.id }}" data-user-name="{{ user.nome }}">
+                                Alterar Senha
+                            </button>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="4" class="text-center p-5 text-muted">Nenhum usuário cadastrado.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+
+<div class="modal fade" id="changePasswordModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="changePasswordForm" method="post">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="changePasswordModalLabel">Alterar Senha</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Definindo nova senha para <strong id="userNameInModal"></strong>.</p>
+                    <div class="mb-3">
+                        <label for="new-password" class="form-label">Nova Senha</label>
+                        <input type="password" class="form-control" id="new-password" name="new_password" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="confirm-password" class="form-label">Confirmar Nova Senha</label>
+                        <input type="password" class="form-control" id="confirm-password" name="confirm_password" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar Nova Senha</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const changePasswordModal = document.getElementById('changePasswordModal');
+    if (changePasswordModal) {
+        changePasswordModal.addEventListener('show.bs.modal', event => {
+            const button = event.relatedTarget;
+            const userId = button.getAttribute('data-user-id');
+            const userName = button.getAttribute('data-user-name');
+
+            const modalTitle = changePasswordModal.querySelector('.modal-title');
+            const modalBodyName = changePasswordModal.querySelector('#userNameInModal');
+            const form = changePasswordModal.querySelector('#changePasswordForm');
+
+            modalTitle.textContent = `Alterar Senha`;
+            modalBodyName.textContent = userName;
+            form.action = `/users/${userId}/change_password`;
+        });
+    }
+});
+</script>
+</body>
+</html>
