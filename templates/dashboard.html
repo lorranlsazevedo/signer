@@ -3,122 +3,256 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Documentos enviados</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
-    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <title>Dashboard de Documentos</title>
 
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+    <style>
+        /* CSS Integrado - Design Híbrido (Cabeçalho Escuro + Conteúdo Claro) */
+        :root {
+            --bs-font-sans-serif: 'Inter', sans-serif;
+            --bs-body-bg: #f9fafb; /* Fundo cinza super claro */
+            --bs-body-color: #374151;
+            --bs-border-color: #e5e7eb;
+            --bs-primary: #4f46e5;
+            --bs-primary-rgb: 79, 70, 229;
+            --header-dark-bg: #111827; /* Cor escura para o cabeçalho */
+        }
+
+        body {
+            background-color: var(--bs-body-bg);
+            font-family: var(--bs-font-sans-serif);
+        }
+
+        /* ALTERAÇÃO: Deixando o cabeçalho com um tom escuro profissional */
+        .header {
+            background-color: var(--header-dark-bg);
+            border-bottom: 1px solid var(--bs-border-color);
+        }
+
+        .brand-logo {
+            height: 100px;
+        }
+
+        /* Card Principal */
+        .main-card {
+            background-color: #ffffff;
+            border: 1px solid var(--bs-border-color);
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+        }
+
+        .main-card-header {
+            background-color: transparent;
+            border-bottom: 1px solid var(--bs-border-color);
+        }
+
+        /* Tabela */
+        .table {
+            --bs-table-bg: transparent;
+            --bs-table-border-color: var(--bs-border-color);
+            --bs-table-hover-bg: #f9fafb;
+            --bs-table-color: var(--bs-body-color);
+            --bs-table-striped-bg: #f9fafb;
+        }
+
+        .table thead th {
+            color: #6b7280;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+
+        .table tbody td {
+            vertical-align: middle;
+        }
+
+        .fw-semibold {
+            font-weight: 500 !important;
+        }
+
+        /* Badges de status para Tema Claro */
+        .badge { font-weight: 500; padding: 0.35em 0.75em; border-radius: 0.375rem; }
+        .badge.status-concluido, .badge.status-assinado { background-color: #d1fae5; color: #065f46; }
+        .badge.status-pendente, .badge.status-aguardando { background-color: #fef3c7; color: #92400e; }
+        .badge.status-cancelado { background-color: #fee2e2; color: #991b1b; }
+        .badge.status-erro-de-api { background-color: #e5e7eb; color: #4b5563; }
+    </style>
 </head>
 
 <body>
+
 {% include 'header.html' %}
 
-<div class="container mt-4">
-    <h1 class="d-inline">Lista de Documentos</h1>
-    <a href="{{ url_for('envio') }}" class="btn btn-success float-right">Nova Assinatura</a>
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Nome do Arquivo</th>
-                <th>Nome do Destinatário</th>
-                <th>Data de Envio</th>
-                <th>Status</th>
-                <th>Arquivo</th>
-                <th>Ações</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for doc in documentos %}
-            <tr>
-                <td>{{ doc.nome_arquivo }}</td>
-               <td>
-                    {% set destinatarios_list = doc.destinatarios.split(",") if doc.destinatarios else [] %}
-                    {{ destinatarios_list[0] }}
-                    {% if destinatarios_list|length > 1 %}
-                        <span title="{{ ', '.join(destinatarios_list[1:]) }}">e mais...</span>
-                    {% endif %}
-                </td>
-                <td>{{ doc.timestamp|format_timestamp }}</td>
-                <td class="{% if doc.status == 'Pendente' %}status-pendente{% elif doc.status == 'Concluído' %}status-concluido{% endif %}">
-                    {{ doc.status }}
-                </td>
-                <td>
-                    {% if doc.status == "Concluído" %}
-                        <a href="/download_document/{{ doc.id }}?type=PrinterFriendlyVersion">
-                            <img src="{{ url_for('static', filename='img/download.png') }}" alt="Download" width="24" height="24">
-                        </a>
-                    {% endif %}
-                </td>
-                <td>
-                    <button class="btn btn-danger delete-btn" data-id="{{ doc.id }}">Deletar</button>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    <nav aria-label="Page navigation">
-        <ul class="pagination">
-            <li class="page-item {% if current_page <= 1 %}disabled{% endif %}">
-                <a class="page-link" href="{{ url_for('dashboard', page=current_page-1) }}" aria-label="Previous">
-                    <span aria-hidden="true">&laquo;</span>
-                    <span class="sr-only">Previous</span>
-                </a>
-            </li>
-            {% for page_num in range(1, total_pages+1) %}
-            <li class="page-item {% if page_num == current_page %}active{% endif %}">
-                <a class="page-link" href="{{ url_for('dashboard', page=page_num) }}">{{ page_num }}</a>
-            </li>
-            {% endfor %}
-            <li class="page-item {% if current_page >= total_pages %}disabled{% endif %}">
-            <a class="page-link" href="{{ url_for('dashboard', page=current_page+1) }}" aria-label="Next">
-                <span aria-hidden="true">&raquo;</span>
-                <span class="sr-only">Next</span>
-            </a>
-        </li>
-    </ul>
-</nav>
+<main class="container my-5">
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+        <div>
+            <h1 class="h3 fw-bold mb-0">Documentos</h1>
+            <p class="mb-0 text-muted">Gerencie e acompanhe suas assinaturas.</p>
+        </div>
+        <a href="{{ url_for('documents.envio') }}" class="btn btn-primary fw-semibold px-4 py-2">
+            <i class="fas fa-plus me-2"></i>Nova Assinatura
+        </a>
     </div>
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
-<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <div class="main-card">
+        <div class="main-card-header p-3">
+            <form id="search-form" action="{{ url_for('documents.dashboard') }}" method="post">
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0"><i class="fas fa-search text-muted"></i></span>
+                    <input type="text" class="form-control border-start-0" name="query" id="query-input" placeholder="Buscar por nome do arquivo ou destinatário...">
+                    <button class="btn btn-outline-secondary" type="submit">Buscar</button>
+                    <button class="btn btn-outline-secondary" type="button" id="clear-search">Limpar</button>
+                </div>
+            </form>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th class="px-4 py-3">Arquivo</th>
+                        <th class="px-4 py-3">Destinatário</th>
+                        <th class="px-4 py-3">Data de Envio</th>
+                        <th class="text-center px-4 py-3">Status</th>
+                        <th class="text-center px-4 py-3">Download</th>
+                        <th class="text-end px-4 py-3">Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="document-table-body">
+                    {% for doc in documentos %}
+                    <tr>
+                        <td class="px-4 py-3">
+                            <div class="fw-semibold">{{ doc.nome_arquivo }}</div>
+                            <small class="text-muted">ID: {{ doc.id }}</small>
+                        </td>
+                        <td class="px-4 py-3 text-muted">
+                            {{ doc.destinatarios.split(",")[0] if doc.destinatarios else 'N/A' }}
+                            {% if doc.destinatarios and doc.destinatarios.split(",")|length > 1 %}
+                                <span class="badge bg-light text-dark ms-1" title="{{ doc.destinatarios.split(',')[1:]|join(', ') }}">
+                                    +{{ doc.destinatarios.split(",")|length - 1 }}
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td class="px-4 py-3 text-muted">{{ doc.timestamp|format_timestamp }}</td>
+                        <td class="text-center px-4 py-3">
+                            {% set status_class = doc.status|lower|replace(' ', '-')|replace('í', 'i')|replace('ç', 'c')|replace('ã', 'a') %}
+                            <span class="badge status-{{ status_class }}">
+                                {{ doc.status }}
+                            </span>
+                        </td>
+                        <td class="text-center px-4 py-3">
+                            {% if doc.status == "Concluído" or doc.status == "Assinado" %}
+                                <a href="{{ url_for('documents.download_document', doc_db_id=doc.id, type='PrinterFriendlyVersion') }}" class="btn btn-sm btn-link text-secondary" title="Baixar Documento Assinado">
+                                    <i class="fas fa-download"></i>
+                                </a>
+                            {% endif %}
+                        </td>
+                        <td class="text-end px-4 py-3">
+                            <a href="{{ url_for('documents.detalhes_documento', doc_db_id=doc.id) }}" class="btn btn-sm btn-outline-secondary">
+                                Detalhes
+                            </a>
+                            <button class="btn btn-sm btn-outline-danger delete-btn" data-url="{{ url_for('documents.delete_document', doc_db_id=doc.id) }}">
+                                Deletar
+                            </button>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center py-5 text-muted">
+                            <i class="fas fa-folder-open fa-2x mb-3"></i>
+                            <h5 class="mb-0">Nenhum documento encontrado.</h5>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% if total_pages > 1 %}
+        <div class="card-footer p-3">
+            <nav id="pagination-nav">
+                <ul class="pagination justify-content-center mb-0">
+                    <li class="page-item {% if current_page <= 1 %}disabled{% endif %}">
+                        <a class="page-link" href="{{ url_for('documents.dashboard', page=current_page-1, query=request.args.get('query', '')) }}">&laquo;</a>
+                    </li>
+                    {% for page_num in range(1, total_pages+1) %}
+                    <li class="page-item {% if page_num == current_page %}active{% endif %}">
+                        <a class="page-link" href="{{ url_for('documents.dashboard', page=page_num, query=request.args.get('query', '')) }}">{{ page_num }}</a>
+                    </li>
+                    {% endfor %}
+                    <li class="page-item {% if current_page >= total_pages %}disabled{% endif %}">
+                        <a class="page-link" href="{{ url_for('documents.dashboard', page=current_page+1, query=request.args.get('query', '')) }}">&raquo;</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+    </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-document.addEventListener("DOMContentLoaded", function() {
-    const deleteButtons = document.querySelectorAll('.delete-btn');
+    document.addEventListener('DOMContentLoaded', () => {
+        const searchForm = document.getElementById('search-form');
+        const tableBody = document.getElementById('document-table-body');
+        const paginationNav = document.getElementById('pagination-nav');
 
-    deleteButtons.forEach(button => {
-        button.addEventListener('click', function(e) {
-            const docId = e.target.getAttribute('data-id');
-            if(confirm("Tem certeza de que deseja deletar este documento?")) {
-                deleteDocument(docId);
+        const handleSearch = async (e) => {
+            e.preventDefault();
+            try {
+                const formData = new FormData(searchForm);
+                const response = await fetch(searchForm.action, {
+                    method: 'POST',
+                    body: new URLSearchParams(formData)
+                });
+
+                if (response.ok) {
+                    tableBody.innerHTML = await response.text();
+                    if(paginationNav) paginationNav.style.display = 'none';
+                } else {
+                    tableBody.innerHTML = '<tr><td colspan="6" class="text-center text-danger">Erro ao carregar resultados.</td></tr>';
+                }
+            } catch (error) {
+                console.error("Erro na busca:", error);
+                tableBody.innerHTML = '<tr><td colspan="6" class="text-center text-danger">Falha de comunicação.</td></tr>';
             }
-        });
-    });
-});
+        };
+        searchForm.addEventListener('submit', handleSearch);
 
-function deleteDocument(id) {
-    fetch(`/api/documents/${id}`, {
-        method: 'DELETE',
-    })
-    .then(response => {
-        if (response.headers.get('content-type').includes('application/json')) {
-            return response.json();
-        } else {
-            throw new Error('Não é um JSON válido');
+        // --- LÓGICA PARA DELETAR (continua igual) ---
+        const handleDelete = async (e) => {
+            if (!e.target.closest('.delete-btn')) return;
+            e.preventDefault();
+            const button = e.target.closest('.delete-btn');
+            const deleteUrl = button.dataset.url;
+            if (confirm("Tem certeza de que deseja deletar este documento?")) {
+                try {
+                    const response = await fetch(deleteUrl, { method: 'POST' });
+                    const data = await response.json();
+                    if (response.ok && data.code === "success") {
+                        button.closest('tr').remove();
+                    } else {
+                        alert(`Erro: ${data.message || 'Não foi possível deletar.'}`);
+                    }
+                } catch (error) {
+                    alert("Ocorreu um erro de comunicação.");
+                }
+            }
+        };
+        document.body.addEventListener('click', handleDelete);
+
+        // --- LÓGICA PARA LIMPAR A BUSCA ---
+        const clearSearchBtn = document.getElementById('clear-search');
+        if (clearSearchBtn) {
+            clearSearchBtn.addEventListener('click', () => {
+                window.location.href = "{{ url_for('documents.dashboard') }}";
+            });
         }
-    })
-    .then(data => {
-        if (data.code && data.code === "success") {
-            alert("Documento deletado com sucesso!");
-            location.reload(); // Recarregue a página para atualizar a lista
-        } else {
-            alert("Erro ao deletar o documento: " + data.message);
-        }
-    })
-    .catch(error => {
-        console.error("Erro ao deletar o documento:", error);
     });
-}
 </script>
 
 </body>

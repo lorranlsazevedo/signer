@@ -1,0 +1,45 @@
+{% for doc in documentos %}
+<tr>
+    <td class="px-4 py-3">
+        <div class="fw-semibold">{{ doc.nome_arquivo }}</div>
+        <small class="text-muted">ID: {{ doc.id }}</small>
+    </td>
+    <td class="px-4 py-3 text-muted">
+        {{ doc.destinatarios.split(",")[0] if doc.destinatarios else 'N/A' }}
+        {% if doc.destinatarios and doc.destinatarios.split(",")|length > 1 %}
+            <span class="badge bg-light text-dark ms-1" title="{{ doc.destinatarios.split(',')[1:]|join(', ') }}">
+                +{{ doc.destinatarios.split(",")|length - 1 }}
+            </span>
+        {% endif %}
+    </td>
+    <td class="px-4 py-3 text-muted">{{ doc.timestamp|format_timestamp }}</td>
+    <td class="text-center px-4 py-3">
+        {% set status_class = doc.status|lower|replace(' ', '-')|replace('í', 'i')|replace('ç', 'c')|replace('ã', 'a') %}
+        <span class="badge status-{{ status_class }}">
+            {{ doc.status }}
+        </span>
+    </td>
+    <td class="text-center px-4 py-3">
+        {% if doc.status == "Concluído" or doc.status == "Assinado" %}
+            <a href="{{ url_for('documents.download_document', doc_db_id=doc.id, type='PrinterFriendlyVersion') }}" class="btn btn-sm btn-link text-secondary" title="Baixar Documento Assinado">
+                <i class="fas fa-download"></i>
+            </a>
+        {% endif %}
+    </td>
+    <td class="text-end px-4 py-3">
+        <a href="{{ url_for('documents.detalhes_documento', doc_db_id=doc.id) }}" class="btn btn-sm btn-outline-secondary">
+            Detalhes
+        </a>
+        <button class="btn btn-sm btn-outline-danger delete-btn" data-url="{{ url_for('documents.delete_document', doc_db_id=doc.id) }}">
+            Deletar
+        </button>
+    </td>
+</tr>
+{% else %}
+<tr>
+    <td colspan="6" class="text-center py-5 text-muted">
+        <i class="fas fa-folder-open fa-2x mb-3"></i>
+        <h5 class="mb-0">Nenhum documento encontrado.</h5>
+    </td>
+</tr>
+{% endfor %}

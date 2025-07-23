@@ -1,270 +1,298 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cadastro de Assinaturas</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <title>Nova Assinatura</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+    <style>
+        /* CSS Padrão do Sistema (Cabeçalho Escuro + Conteúdo Claro) */
+        :root {
+            --bs-font-sans-serif: 'Inter', sans-serif;
+            --bs-body-bg: #f9fafb;
+            --bs-body-color: #374151;
+            --bs-border-color: #e5e7eb;
+            --bs-primary: #4f46e5;
+            --bs-primary-rgb: 79, 70, 229;
+            --header-dark-bg: #111827;
+        }
+
+        body {
+            background-color: var(--bs-body-bg);
+            font-family: var(--bs-font-sans-serif);
+        }
+
+        .header {
+            background-color: var(--header-dark-bg);
+            border-bottom: 1px solid var(--bs-border-color);
+        }
+
+        .brand-logo {
+            height: 40px;
+        }
+
+        .main-card {
+            background-color: #ffffff;
+            border: 1px solid var(--bs-border-color);
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+        }
+
+        .signer-item {
+            border: 1px solid var(--bs-border-color);
+            border-radius: 0.5rem;
+        }
+
+        .upload-area {
+            border: 2px dashed var(--bs-border-color);
+            border-radius: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+        }
+        .upload-area:hover, .upload-area.dragover {
+            background-color: #eff6ff;
+            border-color: var(--bs-primary);
+        }
+    </style>
 </head>
 
 <body>
-    {% include 'header.html' %}
-    <div class="container">
-        <h1>Cadastro de Assinaturas</h1>
+{% include 'header.html' %}
 
-    <form action="/envio" method="post" enctype="multipart/form-data" onsubmit="return validateForm();">
-
-        <div class="form-group signers-list" id="signers">
-            <h2>Signatários:</h2>
+<main class="container my-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 fw-bold mb-0">Nova Assinatura</h1>
+            <p class="text-muted mb-0">Adicione os signatários e o documento para iniciar.</p>
         </div>
+        <a href="{{ url_for('documents.dashboard') }}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-2"></i> Voltar
+        </a>
+    </div>
 
-        <button type="button" data-toggle="modal" data-target="#signerModal" class="btn btn-primary mb-3">Adicionar Signatário</button>
+    <form action="{{ url_for('documents.envio') }}" method="post" enctype="multipart/form-data" id="main-form">
+        <div class="main-card">
+            <div class="card-body p-4">
+                <h5 class="card-title fw-bold">1. Signatários</h5>
+                <p class="text-muted">Adicione um ou mais participantes que assinarão o documento.</p>
+                <div id="signers-list" class="d-grid gap-3 mb-3">
+                    </div>
+                <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#signerModal">
+                    <i class="fas fa-user-plus me-2"></i>Adicionar Signatário
+                </button>
+            </div>
 
-        <div class="form-group">
-            <label for="file_input" class="btn btn-secondary">Selecionar arquivo</label>
-            <input type="file" name="file" id="file_input" style="display: none;">
-            <span id="file_name" class="ml-2"></span>
-        </div>
+            <hr class="my-0">
 
+            <div class="card-body p-4">
+                <h5 class="card-title fw-bold">2. Documento</h5>
+                <p class="text-muted">Selecione o arquivo PDF que será assinado.</p>
+                <div id="upload-area" class="upload-area text-center p-5">
+                    <i class="fas fa-file-arrow-up fa-3x text-muted mb-3"></i>
+                    <h6 class="mb-1">Arraste e solte o arquivo aqui</h6>
+                    <p class="text-muted mb-3">ou</p>
+                    <label for="file-input" class="btn btn-secondary">Selecionar Arquivo</label>
+                    <input type="file" name="file" id="file-input" class="d-none" accept=".pdf">
+                    <p id="file-name" class="mt-3 fw-semibold text-primary"></p>
+                </div>
+            </div>
 
-        <div class="form-group">
-            <input type="submit" value="Iniciar Assinatura" class="btn btn-success">
+            <hr class="my-0">
+
+            <div class="card-footer p-4 text-end">
+                <button type="submit" class="btn btn-primary btn-lg fw-semibold px-5 py-2">
+                    <i class="fas fa-paper-plane me-2"></i>Iniciar Assinatura
+                </button>
+            </div>
         </div>
     </form>
+</main>
 
-    {% if error_message %}
-    <div class="error">
-        {{ error_message }}
-    </div>
-    {% endif %}
-</div>
-
-<!-- Início do Modal -->
-<div class="modal fade" id="signerModal" tabindex="-1" role="dialog" aria-labelledby="signerModalLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
+<div class="modal fade" id="signerModal" tabindex="-1" aria-labelledby="signerModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="signerModalLabel">Adicionar Signatário</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
-                    <span aria-hidden="true">&times;</span>
-                </button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
             </div>
             <div class="modal-body">
-                <label for="signer_email_search">Pesquisar por E-mail:</label>
-                <input type="email" id="signer_email_search" class="form-control" placeholder="Digite o e-mail para pesquisar">
-                <button type="button" onclick="searchSigner()">Pesquisar</button>
-
-                <div id="signerSearchResult">
-                    <!-- Aqui serão exibidos os resultados da pesquisa -->
+                <nav>
+                    <div class="nav nav-tabs" id="nav-tab" role="tablist">
+                        <button class="nav-link active" id="nav-search-tab" data-bs-toggle="tab" data-bs-target="#nav-search" type="button" role="tab">Pesquisar</button>
+                        <button class="nav-link" id="nav-register-tab" data-bs-toggle="tab" data-bs-target="#nav-register" type="button" role="tab">Cadastrar Novo</button>
+                    </div>
+                </nav>
+                <div class="tab-content p-3 border border-top-0" id="nav-tabContent">
+                    <div class="tab-pane fade show active" id="nav-search" role="tabpanel">
+                        <div class="input-group mb-3">
+                            <input type="email" id="search-email-input" class="form-control" placeholder="Digite o e-mail para pesquisar...">
+                            <button class="btn btn-outline-secondary" type="button" id="search-signer-btn">Pesquisar</button>
+                        </div>
+                        <div id="search-results" class="list-group"></div>
+                    </div>
+                    <div class="tab-pane fade" id="nav-register" role="tabpanel">
+                        <div class="mb-3">
+                            <label for="new-signer-name" class="form-label">Nome Completo <span class="text-danger">*</span></label>
+                            <input type="text" id="new-signer-name" class="form-control">
+                        </div>
+                        <div class="mb-3">
+                            <label for="new-signer-email" class="form-label">Email <span class="text-danger">*</span></label>
+                            <input type="email" id="new-signer-email" class="form-control">
+                        </div>
+                        <div class="mb-3">
+                            <label for="new-signer-cpf" class="form-label">CPF (Opcional)</label>
+                            <input type="text" id="new-signer-cpf" class="form-control" placeholder="000.000.000-00">
+                        </div>
+                        <button type="button" class="btn btn-primary w-100" id="add-new-signer-btn">Adicionar</button>
+                    </div>
                 </div>
-
-                <hr>
-                <h6>Ou cadastre um novo signatário:</h6>
-                <label for="new_signer_name">Nome: <span style="color: red;">*</span></label>
-                <input type="text" id="new_signer_name" class="form-control">
-                <label for="new_signer_email">Email: <span style="color: red;">*</span></label>
-                <input type="email" id="new_signer_email" class="form-control">
-                <label for="new_signer_cpf">CPF:</label>
-                <input type="text" id="new_signer_cpf" class="form-control">
-
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
-                <button type="button" class="btn btn-primary" onclick="addSignerFromModal()">Adicionar</button>
-            </div>
-        </div>
         </div>
     </div>
-    <!-- Fim do Modal -->
+</div>
 
-
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
-<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
+document.addEventListener('DOMContentLoaded', () => {
+    // --- INICIALIZAÇÃO ---
     let signerCount = 0;
+    const signersList = document.getElementById('signers-list');
+    const signerModal = new bootstrap.Modal(document.getElementById('signerModal'));
+    const mainForm = document.getElementById('main-form');
 
-    function searchSigner() {
-        const email = document.getElementById('signer_email_search').value;
+    // --- LÓGICA DO MODAL (BUSCA E CADASTRO) ---
+    const searchEmailInput = document.getElementById('search-email-input');
+    const searchSignerBtn = document.getElementById('search-signer-btn');
+    const searchResults = document.getElementById('search-results');
 
-        $.ajax({
-            url: '/search_signer',
-            type: 'POST',
-            data: { email: email },
-            success: function(data) {
-                let resultHtml = '';
-                if (data.signers && data.signers.length > 0) {
-                    data.signers.forEach(signer => {
-                        resultHtml += `<p>${signer.name} (${signer.email}) <button onclick="selectSigner('${signer.name}', '${signer.email}', '${signer.cpf || ''}')">Selecionar</button></p>`;
+    const newSignerName = document.getElementById('new-signer-name');
+    const newSignerEmail = document.getElementById('new-signer-email');
+    const newSignerCpf = document.getElementById('new-signer-cpf');
+    const addNewSignerBtn = document.getElementById('add-new-signer-btn');
 
-                    });
-                } else {
-                    resultHtml = '<p>Nenhum signatário encontrado.</p>';
-                }
-                document.getElementById('signerSearchResult').innerHTML = resultHtml;
-            }
+    // Função para adicionar o signatário à lista principal
+    const addSignerToList = (name, email, cpf = '') => {
+        signerCount++;
+        const signerId = `signer-${signerCount}`;
+        const signerHtml = `
+            <div class="signer-item p-3 d-flex justify-content-between align-items-center" id="${signerId}">
+                <div>
+                    <strong class="d-block">${name}</strong>
+                    <span class="text-muted">${email}</span>
+                </div>
+                <button type="button" class="btn-close" aria-label="Remover" onclick="document.getElementById('${signerId}').remove()"></button>
+                <input type="hidden" name="signer_name_${signerCount}" value="${name}">
+                <input type="hidden" name="signer_email_${signerCount}" value="${email}">
+                ${cpf ? `<input type="hidden" name="signer_cpf_${signerCount}" value="${cpf}">` : ''}
+            </div>`;
+        signersList.insertAdjacentHTML('beforeend', signerHtml);
+        signerModal.hide();
+    };
+
+    // Pesquisar signatário
+    const searchSigner = async () => {
+        const email = searchEmailInput.value.trim();
+        if (!email) return;
+
+        const response = await fetch('/search_signer', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: `email=${encodeURIComponent(email)}`
         });
-    }
+        const data = await response.json();
 
-    function selectSigner(name, email, cpf='') {
-        document.getElementById('new_signer_name').value = name;
-        document.getElementById('new_signer_email').value = email;
-        if (cpf) {
-            document.getElementById('new_signer_cpf').value = cpf;
+        searchResults.innerHTML = ''; // Limpa resultados anteriores
+        if (data.signers && data.signers.length > 0) {
+            data.signers.forEach(signer => {
+                const item = document.createElement('button');
+                item.type = 'button';
+                item.className = 'list-group-item list-group-item-action';
+                item.innerHTML = `<strong>${signer.name}</strong><br><small>${signer.email}</small>`;
+                item.onclick = () => addSignerToList(signer.name, signer.email, signer.cpf);
+                searchResults.appendChild(item);
+            });
+        } else {
+            searchResults.innerHTML = '<p class="text-center text-muted mt-2">Nenhum signatário encontrado.</p>';
         }
-    }
+    };
+    searchSignerBtn.addEventListener('click', searchSigner);
+    searchEmailInput.addEventListener('keypress', e => { if (e.key === 'Enter') searchSigner(); });
 
-
-    function addSignerFromModal() {
-        const name = document.getElementById('new_signer_name').value;
-        const email = document.getElementById('new_signer_email').value;
-        const cpf = document.getElementById('new_signer_cpf').value;
+    // Adicionar novo signatário (após cadastro)
+    addNewSignerBtn.addEventListener('click', async () => {
+        const name = newSignerName.value.trim();
+        const email = newSignerEmail.value.trim();
+        const cpf = newSignerCpf.value.trim();
 
         if (!name || !email) {
-            alert("Por favor, preencha o nome e o e-mail.");
+            alert("Nome e email são obrigatórios.");
             return;
         }
 
-        if (cpf && !validarCPF(cpf)) {
-            alert("Por favor, insira um CPF válido.");
+        // Validação de email existente
+        const checkResponse = await fetch('/check_email', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: `email=${encodeURIComponent(email)}`
+        });
+        const checkData = await checkResponse.json();
+
+        if (checkData.exists) {
+            alert("Um signatário com este e-mail já existe. Por favor, use a aba 'Pesquisar'.");
+        } else {
+            addSignerToList(name, email, cpf);
+        }
+    });
+
+    // --- LÓGICA DE UPLOAD ---
+    const uploadArea = document.getElementById('upload-area');
+    const fileInput = document.getElementById('file-input');
+    const fileNameDisplay = document.getElementById('file-name');
+
+    uploadArea.addEventListener('click', () => fileInput.click());
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        uploadArea.addEventListener(eventName, e => {
+            e.preventDefault();
+            e.stopPropagation();
+        });
+    });
+    ['dragenter', 'dragover'].forEach(eventName => uploadArea.addEventListener(eventName, () => uploadArea.classList.add('dragover')));
+    ['dragleave', 'drop'].forEach(eventName => uploadArea.addEventListener(eventName, () => uploadArea.classList.remove('dragover')));
+    uploadArea.addEventListener('drop', e => {
+        fileInput.files = e.dataTransfer.files;
+        updateFileName();
+    });
+    fileInput.addEventListener('change', updateFileName);
+
+    function updateFileName() {
+        fileNameDisplay.textContent = fileInput.files.length > 0 ? `Arquivo: ${fileInput.files[0].name}` : '';
+    }
+
+    // --- VALIDAÇÃO DO FORMULÁRIO PRINCIPAL ---
+    mainForm.addEventListener('submit', (e) => {
+        if (document.querySelectorAll('.signer-item').length === 0) {
+            e.preventDefault();
+            alert("Adicione pelo menos um signatário.");
+            return;
+        }
+        if (fileInput.files.length === 0) {
+            e.preventDefault();
+            alert("Selecione um documento para assinatura.");
             return;
         }
 
-        addSigner(name, email, cpf);
-        clearModalFields();
-        $('#signerModal').modal('hide');
-    }
-
-
-    function clearModalFields() {
-        document.getElementById('new_signer_name').value = "";
-        document.getElementById('new_signer_email').value = "";
-        document.getElementById('new_signer_cpf').value = "";
-        document.getElementById('signer_email_search').value = "";
-        document.getElementById('signerSearchResult').innerHTML = "";
-    }
-
-
-    function addSigner(name, email, cpf) {
-        signerCount++;
-
-        const signerDiv = document.createElement('div');
-        signerDiv.className = "signer";
-
-        const nameLabel = document.createElement('label');
-        nameLabel.setAttribute('for', `signer_name_${signerCount}`);
-        nameLabel.innerText = 'Nome:';
-        const nameInput = document.createElement('input');
-        nameInput.setAttribute('type', 'text');
-        nameInput.setAttribute('name', `signer_name_${signerCount}`);
-        nameInput.className = 'form-control';
-        nameInput.value = name;
-        nameInput.required = true;
-
-        const emailLabel = document.createElement('label');
-        emailLabel.setAttribute('for', `signer_email_${signerCount}`);
-        emailLabel.innerText = 'Email:';
-        const emailInput = document.createElement('input');
-        emailInput.setAttribute('type', 'email');
-        emailInput.setAttribute('name', `signer_email_${signerCount}`);
-        emailInput.className = 'form-control';
-        emailInput.value = email;
-        emailInput.required = true;
-
-        signerDiv.appendChild(nameLabel);
-        signerDiv.appendChild(nameInput);
-        signerDiv.appendChild(emailLabel);
-        signerDiv.appendChild(emailInput);
-
-        // Se houver valor no CPF, adicione-o à listagem
-        if (cpf) {
-            const cpfLabel = document.createElement('label');
-            cpfLabel.setAttribute('for', `signer_cpf_${signerCount}`);
-            cpfLabel.innerText = 'CPF:';
-            const cpfInput = document.createElement('input');
-            cpfInput.setAttribute('type', 'text');
-            cpfInput.setAttribute('name', `signer_cpf_${signerCount}`);
-            cpfInput.className = 'form-control';
-            cpfInput.value = cpf;
-            cpfInput.required = true;
-
-            signerDiv.appendChild(cpfLabel);
-            signerDiv.appendChild(cpfInput);
-        }
-
-        document.getElementById('signers').appendChild(signerDiv);
-}
-
-   function validateForm() {
-        const fileInput = document.getElementById("file_input");
-        if (!fileInput.files.length) {
-            alert("Por favor, selecione um anexo antes de prosseguir.");
-            return false;  // Isso impedirá o envio do formulário
-        }
-
-        document.querySelector("input[type='submit']").value = "Processando...";
-        document.querySelector("input[type='submit']").disabled = true;
-        return true;
-    }
-
-
-    $(document).ready(function() {
-        $('#new_signer_cpf').mask('000.000.000-00', {reverse: true});
-
-        document.querySelector("form").onsubmit = function() {
-            const fileInput = document.getElementById("file_input");
-
-            if (!fileInput.files.length) {
-                alert("Por favor, selecione um anexo antes de prosseguir.");
-                return false; // Isso impedirá o envio do formulário
-            }
-
-            this.querySelector("input[type='submit']").value = "Processando...";
-            this.querySelector("input[type='submit']").disabled = true;
-            return true; // Isso permitirá o envio do formulário
-        };
+        const submitBtn = mainForm.querySelector('button[type="submit"]');
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> Enviando...`;
+    });
 });
-
-
-    function validarCPF(cpf) {
-        cpf = cpf.replace(/[^\d]+/g, '');
-        if (cpf === '') return false;
-        if (cpf.length !== 11 ||
-            cpf === "00000000000" ||
-            cpf === "11111111111" ||
-            cpf === "22222222222" ||
-            cpf === "33333333333" ||
-            cpf === "44444444444" ||
-            cpf === "55555555555" ||
-            cpf === "66666666666" ||
-            cpf === "77777777777" ||
-            cpf === "88888888888" ||
-            cpf === "99999999999")
-            return false;
-        var add = 0;
-        for (i = 0; i < 9; i++)
-            add += parseInt(cpf.charAt(i)) * (10 - i);
-        var rev = 11 - (add % 11);
-        if (rev === 10 || rev === 11)
-            rev = 0;
-        if (rev !== parseInt(cpf.charAt(9)))
-            return false;
-        add = 0;
-        for (i = 0; i < 10; i++)
-            add += parseInt(cpf.charAt(i)) * (11 - i);
-        rev = 11 - (add % 11);
-        if (rev === 10 || rev === 11)
-            rev = 0;
-        if (rev !== parseInt(cpf.charAt(10)))
-            return false;
-        return true;
-}
-    document.getElementById("file_input").onchange = function() {
-        document.getElementById("file_name").textContent = this.files[0].name;
-    };
 </script>
+
 </body>
 </html>
